@@ -629,10 +629,85 @@ class MainApplication(tk.Toplevel):
                    style="Primary.TButton").grid(row=4, column=0, columnspan=2, pady=20)
 
 
-        # --------------------------- SECCION: MANTENIMIENTO (PLACEHOLDER) ---------------------------
+# --------------------------- SECCION: MANTENIMIENTO ---------------------------
         frame_mantenimiento = tk.Frame(contenedor, bg="white")
         self.secciones["Mantenimiento"] = frame_mantenimiento
-        ttk.Label(frame_mantenimiento, text="Sección de Mantenimiento", font=("Arial", 16, "bold"), foreground="#2C3E50").pack(anchor="center", padx=20, pady=50)
+        contenedor.add(frame_mantenimiento, text="Mantenimiento")
+
+# Título
+        ttk.Label(frame_mantenimiento, text="Gestión de Mantenimiento",
+          font=("Arial", 18, "bold"), foreground="#2C3E50").pack(anchor="center", pady=15)
+
+# ---------------- FORMULARIO ----------------
+        form_frame = tk.Frame(frame_mantenimiento, bg="white", padx=20, pady=15, relief="groove", bd=2)
+        form_frame.pack(pady=10, padx=20, fill="x")
+
+# Equipo
+        ttk.Label(form_frame, text="Equipo:").grid(row=0, column=0, sticky="e", padx=5, pady=5)
+        entry_equipo = ttk.Entry(form_frame)
+        entry_equipo.grid(row=0, column=1, sticky="ew", pady=5)
+
+# Responsables (MULTIPLE selección con Listbox)
+        ttk.Label(form_frame, text="Responsables:").grid(row=1, column=0, sticky="ne", padx=5, pady=5)
+        lista_responsables = tk.Listbox(form_frame, selectmode="multiple", height=4, exportselection=False)
+        for resp in ["Carolina Mtp", "Sara Neiret", "Guido Gandolfo", "Otro técnico"]:
+          lista_responsables.insert(tk.END, resp)
+          lista_responsables.grid(row=1, column=1, sticky="ew", pady=5)
+     
+# Fecha (formato Argentino DD/MM/YYYY)
+        ttk.Label(form_frame, text="Fecha:").grid(row=2, column=0, sticky="e", padx=5, pady=5)
+        entry_fecha = ttk.Entry(form_frame)
+        entry_fecha.insert(0, "DD/MM/YYYY")
+        entry_fecha.grid(row=2, column=1, sticky="ew", pady=5)
+
+# Tipo de mantenimiento
+        ttk.Label(form_frame, text="Tipo:").grid(row=3, column=0, sticky="e", padx=5, pady=5)
+        combo_tipo = ttk.Combobox(form_frame, 
+                          values=["Preventivo", "Correctivo", "Evolutivo"], 
+                          state="readonly")
+        combo_tipo.grid(row=3, column=1, sticky="ew", pady=5)
+
+# Descripción
+        ttk.Label(form_frame, text="Descripción:").grid(row=4, column=0, sticky="ne", padx=5, pady=5)
+        texto_desc = tk.Text(form_frame, height=4, width=40, font=("Arial", 9))
+        texto_desc.grid(row=4, column=1, sticky="ew", pady=5)
+
+# Botón guardar
+        ttk.Button(form_frame, text="Guardar Mantenimiento",
+           style="Primary.TButton"
+           # command=self.guardar_mantenimiento
+           ).grid(row=5, column=0, columnspan=2, pady=15)
+
+        form_frame.grid_columnconfigure(1, weight=1)
+
+# ---------------- HISTORIAL (Treeview con Scrollbar) ----------------
+        tabla_frame = tk.Frame(frame_mantenimiento, bg="white")
+        tabla_frame.pack(fill="both", expand=True, padx=20, pady=10)
+
+        cols = ("Equipo", "Responsables", "Fecha", "Tipo", "Descripción")
+        tabla_mant = ttk.Treeview(tabla_frame, columns=cols, show="headings", height=8)
+
+        for col in cols:
+          tabla_mant.heading(col, text=col)
+          tabla_mant.column(col, width=150, anchor="center")
+
+# Scrollbar vertical
+        scroll_y = ttk.Scrollbar(tabla_frame, orient="vertical", command=tabla_mant.yview)
+        tabla_mant.configure(yscroll=scroll_y.set)
+        scroll_y.pack(side="right", fill="y")
+
+# Scrollbar horizontal
+        scroll_x = ttk.Scrollbar(tabla_frame, orient="horizontal", command=tabla_mant.xview)
+        tabla_mant.configure(xscroll=scroll_x.set)
+        scroll_x.pack(side="bottom", fill="x")
+
+        tabla_mant.pack(fill="both", expand=True)
+
+
+
+
+
+
 
 
         # --------------------------- BOTONERA FUNCIONAL ---------------------------
@@ -641,50 +716,50 @@ class MainApplication(tk.Toplevel):
                        command=lambda t=texto: mostrar_seccion(t)).pack(pady=5, fill="x", padx=10)
 
         # Mostrar inicio por defecto al principio
-        mostrar_seccion("Inicio")
+            mostrar_seccion("Inicio")
 
 
     # Función actualizada para la clase
-    def _actualizar_tablas_inventario(self, mov_tree, tabla_bajas, tabla_mod, resumen_frame,
+            def _actualizar_tablas_inventario(self, mov_tree, tabla_bajas, tabla_mod, resumen_frame,
                                       cargar_productos_en_prestamo_combo_func,
                                       actualizar_tabla_prestamos_func,
                                       actualizar_historial_prestamos_func):
-        """
+             """
         Función para refrescar los datos de todas las tablas y resúmenes de la UI
         después de una operación de la base de datos.
         """
         # 1. Actualizar tabla de Movimientos (Inicio)
-        mov_tree.delete(*mov_tree.get_children())
-        movimientos_db = db.obtener_movimientos_db()
+            mov_tree.delete(*mov_tree.get_children())
+            movimientos_db = db.obtener_movimientos_db()
         for m in movimientos_db:
             mov_tree.insert("", "end", values=m)
 
         # 2. Actualizar tabla de Bajas
-        tabla_bajas.delete(*tabla_bajas.get_children())
-        productos_db = db.obtener_productos_db()
+            tabla_bajas.delete(*tabla_bajas.get_children())
+            productos_db = db.obtener_productos_db()
         for p in productos_db:
             tabla_bajas.insert("", "end", values=p)
 
         # 3. Actualizar tabla de Modificaciones
-        tabla_mod.delete(*tabla_mod.get_children())
+            tabla_mod.delete(*tabla_mod.get_children())
         for p in productos_db:
             tabla_mod.insert("", "end", values=p)
 
         # 4. Actualizar Tarjetas Resumen (Inicio)
-        total_recursos = len(productos_db)
-        prestamos_activos = db.obtener_prestamos_db(estado="Prestado")
-        total_prestamos_activos = sum(p['cantidad'] for p in prestamos_activos)
+            total_recursos = len(productos_db)
+            prestamos_activos = db.obtener_prestamos_db(estado="Prestado")
+            total_prestamos_activos = sum(p['cantidad'] for p in prestamos_activos)
 
         # Actualizar la tarjeta de Recursos Totales y Préstamos Activos
         # Se asume que las tarjetas mantienen el orden de creación
-        tarjetas_labels = [c.winfo_children()[0] for c in resumen_frame.winfo_children() if isinstance(c, tk.Frame)]
-        tarjetas_labels[0].config(text=str(total_recursos)) # Recursos Totales
-        tarjetas_labels[1].config(text=str(total_prestamos_activos)) # Préstamos Activos
+            tarjetas_labels = [c.winfo_children()[0] for c in resumen_frame.winfo_children() if isinstance(c, tk.Frame)]
+            tarjetas_labels[0].config(text=str(total_recursos)) # Recursos Totales
+            tarjetas_labels[1].config(text=str(total_prestamos_activos)) # Préstamos Activos
         # Las otras dos tarjetas (Proyectos en Curso, Pendientes Devolución) quedan en 0 por ahora
 
         # 5. Actualizar tablas de Préstamos
-        cargar_productos_en_prestamo_combo_func()
-        actualizar_tabla_prestamos_func()
-        actualizar_historial_prestamos_func()
+            cargar_productos_en_prestamo_combo_func()
+            actualizar_tabla_prestamos_func()
+            actualizar_historial_prestamos_func()
 
         # ...todo el código desde línea 85 a 767...
